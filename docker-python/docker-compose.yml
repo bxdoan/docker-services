@@ -1,0 +1,68 @@
+version: '3'
+
+services:
+  python:
+    image: python-interpreter-3.9.11
+    restart: unless-stopped
+
+    hostname: gc_python
+
+    links:
+      - postgres
+      - rabbitmq
+      - mongodb
+
+    networks:
+      - gc_network_registry
+
+  rabbitmq:
+    image: rabbitmq:latest
+    container_name: gc_rabbitmq
+    volumes:
+      - ./container-volume-rabbit:/var/lib/rabbitmq
+    networks:
+      - gc_network_registry
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      RABBITMQ_DEFAULT_VHOST: /
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-guest}
+
+  mongodb:
+    image: bitnami/mongodb:3.6
+    container_name: gc_mongodb
+    ports:
+      - 27017:27016
+    hostname: gc_mongodb
+    networks:
+      - gc_network_registry
+    volumes:
+      - ./container-volume-mongo:/bitnami
+    restart: unless-stopped
+
+  postgres:
+    image: mdillon/postgis:11
+    restart: unless-stopped
+
+    ports:
+      - 54322:5432
+
+    environment:
+      POSTGRES_USER     : $DB_USER
+      POSTGRES_PASSWORD : $DB_PASS
+      POSTGRES_DB       : $DB_NAME
+
+    volumes:
+      - ./container-volume-postgres:/var/lib/postgresql/data  # persist postgres data ref. https://stackoverflow.com/a/41650891/248616
+
+    container_name : gc_postgres
+    hostname       : gc_postgres
+
+    networks:
+      - gc_network_registry
+
+networks:
+  gc_network_registry:
+    name: $DOCKER_NETWORK

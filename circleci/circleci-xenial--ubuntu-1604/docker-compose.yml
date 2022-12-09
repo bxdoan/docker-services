@@ -1,0 +1,7 @@
+version: '2.0'
+
+services:
+  xenial:
+    image: circleci/buildpack-deps:xenial
+    container_name: nn_xenial  # nn aka namgivu shorthand
+    command: tail -F anything 2>&1 1>/dev/null # keep container running ref. https://stackoverflow.com/a/45450456/248616

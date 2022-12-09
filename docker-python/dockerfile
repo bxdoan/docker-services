@@ -1,0 +1,72 @@
+FROM python:3.7.6
+
+WORKDIR /app
+
+# deb package initials
+RUN apt-get update && \
+  apt-get install -y software-properties-common
+RUN apt-get update
+RUN apt-get install -y build-essential curl git wget
+RUN apt-get install -y libpq-dev libreadline-gplv2-dev \
+    libncursesw5-dev libssl-dev libsqlite3-dev tk-dev libgdbm-dev \
+    libc6-dev libbz2-dev zlib1g-dev openssl libffi-dev libgeos-dev
+
+RUN apt-get update && \
+    apt-get install -y libxinerama1 libgtk2.0-0 libxss-dev libgconf-2-4 libasound2 libsm6
+
+# install wkhtmltopdf as required by pdfkit
+# we need wkhtmltox-0.12.3 that support headless mode ref. https://github.com/wkhtmltopdf/wkhtmltopdf/issues/2037#issuecomment-344423993
+RUN cd ~ && \
+    wget https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.3/wkhtmltox-0.12.3_linux-generic-amd64.tar.xz && \
+    tar vxf wkhtmltox-0.12.3_linux-generic-amd64.tar.xz && \
+    cp wkhtmltox/bin/wk* /usr/local/bin/ && \
+cd -
+
+RUN mkdir -p /tmp/libreoffice
+
+COPY ./download.tar.gz /tmp/libreoffice
+
+RUN cd /tmp/libreoffice && \
+    l=download.tar.gz && \
+    tar -xvf $l && \
+    d=`ls -td */ | head -n1` && \
+    cd $d/DEBS/ && \
+    dpkg --add-architecture amd64 && \
+    dpkg -i *.deb && \
+cd -
+
+# make :libreoffice softlink to libreoffice binary 6.3
+RUN ln -s /opt/libreoffice7.3/program/soffice /usr/bin/libreoffice
+
+RUN python -m pip install --upgrade pip
+RUN python -m pip install wheel
+# install pipenv
+RUN python -m pip install pipenv
+
+# set utf8 to fix error when running pipenv > Click will abort further execution because Python 3 was configured to use ASCII as encoding for the environment  # ref. https://github.com/docker-library/python/issues/13#ref-pullrequest-164133459
+ENV LC_ALL=C.UTF-8
+ENV LANG=C.UTF-8
+
+# pipenv setup
+ENV PIPENV_VERBOSITY=-1
+    # skip any pipenv warning
+ENV PIPENV_VENV_IN_PROJECT=1
+    # .venv in same folder
+ENV PIPENV_CACHE_DIR=/root/.pipenv/cache
+    # cache folder hoping it faster
+
+# confirm installed softwares
+RUN echo; \
+    echo '-------------------------------------'; \
+    echo 'Confirm installed softwares'; \
+    echo `python --version`; \
+    echo `python -m pipenv --version`; \
+    echo `pipenv --version`; \
+    echo `wkhtmltopdf --version`; \
+    echo `libreoffice --version`; \
+    echo '-------------------------------------';
+
+# install pip packages
+COPY ./Pipfile      ./
+COPY ./Pipfile.lock ./
+RUN pipenv install --system

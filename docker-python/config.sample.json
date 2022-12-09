@@ -1,0 +1,21 @@
+{
+    "mongodb": {
+        "db": "autoarmour",
+        "host": "gc_mongodb",
+        "port": 27017
+    },
+    "postgres": {
+        "autogen_db_suffix": true,
+        "ciuser": "ubuntu",
+        "db": "atlas_test",
+        "host": "gc_postgres",
+        "pool_size": 100,
+        "port": 5432,
+        "pswd": "password",
+        "user": "root"
+    },
+    "redis": {
+        "port": 63799,
+        "queue": "atlas"
+    }
+}
