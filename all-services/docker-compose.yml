@@ -2,7 +2,8 @@ version: '2.0'
 
 services:
   postgres:
-    image: mdillon/postgis  # postgres image with postgis ready
+    image: postgis/postgis:latest
+#    image: mdillon/postgis  # postgres image with postgis ready
     ports:
       - "54322:5432"  # note we double the last digit 2 on purpose to create our port - we aim not to overwrite the original port
     container_name: ${GC}postgres${GC_INSTANCE_ID_APPEND}
@@ -54,7 +55,7 @@ services:
       # use :v_rabbitmq as auto generating volume or use a absolute path to map volume
       - v_rabbitmq:/var/lib/rabbitmq/data
     restart: always
-    env_file: # uncomment appropriate .env files below to enable ssl
+#    env_file: # uncomment appropriate .env files below to enable ssl
       # - .env-rabbitmq-common
       # - .env-rabbitmq-ssl
       # - .env-rabbitmq-management-ssl
