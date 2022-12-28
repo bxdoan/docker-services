@@ -1,15 +1,26 @@
-#TODO add ref. here
-version: '2.0'
+version: '3'
 
 services:
   postgres:
-    image: mdillon/postgis  # postgres image with postgis ready
+    image: postgres:14.5
+    restart: unless-stopped
+
     ports:
-      - "54322:5432"  # note we double the last digit 2 on purpose to create our port - we aim not to overwrite the original port
-    container_name: bxd_postgres
+      - $DB_PORT:5432
+
+    environment:
+      POSTGRES_USER     : $DB_USER
+      POSTGRES_PASSWORD : $DB_PASS
+      POSTGRES_DB       : $DB_NAME
+
     volumes:
-      - v_postgres:/var/lib/postgresql/data
-    restart: always
+      - ./.container-volume:/var/lib/postgresql/data  # persist postgres data ref. https://stackoverflow.com/a/41650891/248616
+
+    container_name : $DB_CONTAINER_NAME
+    hostname       : $DB_CONTAINER_NAME
+
+    networks:
+      - docker_network_registry
 
   pgadmin:
     container_name: pgadmin_container
